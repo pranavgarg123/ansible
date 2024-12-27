@@ -161,7 +161,7 @@ def run_support_container(
     if args.dev_systemd_debug:
         options.extend(('--env', 'SYSTEMD_LOG_LEVEL=debug'))
 
-    display.info('Starting new "%s" container.' % name)
+    print('Starting new "%s" container.' % name)
     docker_pull(args, image)
     support_container_id = run_container(args, image, name, options, create_only=not start, cmd=cmd)
     running = start

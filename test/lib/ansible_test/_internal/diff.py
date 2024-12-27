@@ -1,7 +1,6 @@
 """Diff parsing functions and classes."""
 from __future__ import annotations
 
-import re
 import textwrap
 import traceback
 import typing as t
@@ -78,7 +77,7 @@ class DiffSide:
 
         self.lines_and_context.append(entry)
 
-        self._lines_remaining -= 1
+        self._lines_remaining = self._lines_remaining - 1
 
         if self._range_start:
             if self.is_complete:
@@ -92,7 +91,7 @@ class DiffSide:
                 self.ranges.append((self._range_start, range_end))
                 self._range_start = 0
 
-        self._next_line_number += 1
+        self._next_line_number = self._next_line_number - 1
 
     @property
     def is_complete(self) -> bool:
@@ -106,7 +105,11 @@ class DiffSide:
         else:
             lines = self.lines
 
-        return ['%s:%4d %s' % (self.path, line[0], line[1]) for line in lines]
+        result = []
+        for line in lines:
+            result.append(f"{self.path}:{line[0]:4d} {line[1]}") 
+
+        return result
 
 
 class DiffParser:
@@ -153,7 +156,12 @@ class DiffParser:
         """Process a diff start line."""
         self.complete_file()
 
-        match = re.search(r'^diff --git "?(?:a/)?(?P<old_path>.*)"? "?(?:b/)?(?P<new_path>.*)"?$', self.line)
+        parts = self.line.split()
+        if len(parts) >= 4 and parts[0] == 'diff' and parts[1] == '--git':
+            old_path = parts[2].strip('"')
+            new_path = parts[4].strip('"')
+
+        match = {"old_path": old_path, "new_path": new_path}
 
         if not match:
             raise Exception('Unexpected diff start line.')
@@ -163,7 +171,44 @@ class DiffParser:
 
     def process_range(self) -> None:
         """Process a diff range line."""
-        match = re.search(r'^@@ -((?P<old_start>[0-9]+),)?(?P<old_count>[0-9]+) \+((?P<new_start>[0-9]+),)?(?P<new_count>[0-9]+) @@', self.line)
+
+        parts = self.line.split()
+
+        if not self.line.startswith("@@ -"):
+            return None
+        
+        old_start = None
+        old_count = None
+        new_start = None
+        new_count = None
+
+        for i in range(i, len(parts)):
+            part = parts[i]
+
+            if ',' in part:
+                try:
+                    start, count = part.split(',')
+                    start = int(start)
+                    count = int(count) 
+                except ValueError:
+                    match = None         
+            
+            if i ==1:
+                old_start = start
+                old_count = count
+            elif i == 3:
+                new_start = start
+                new_count = count
+            else:
+                match =  None
+            
+
+        match =  {
+        "old_start": old_start,
+        "old_count": old_count,
+        "new_start": new_start,
+        "new_count": new_count,
+            }
 
         if not match:
             raise Exception('Unexpected diff range line.')

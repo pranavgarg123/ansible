@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 
 # set by ansible-test to a single directory, rather than a list of directories as supported by Ansible itself
-ANSIBLE_COLLECTIONS_PATH = os.path.join(os.environ['ANSIBLE_COLLECTIONS_PATH'], 'ansible_collections')
+ANSIBLE_COLLECTIONS_PATH = os.environ['ANSIBLE_COLLECTIONS_PATH'] + '/ansible_collections'
 
 # set by ansible-test to the minimum python version supported on the controller
 ANSIBLE_CONTROLLER_MIN_PYTHON_VERSION = tuple(int(x) for x in os.environ['ANSIBLE_CONTROLLER_MIN_PYTHON_VERSION'].split('.'))
@@ -15,7 +15,7 @@ ANSIBLE_CONTROLLER_MIN_PYTHON_VERSION = tuple(int(x) for x in os.environ['ANSIBL
 def collection_resolve_package_path(path):
     """Configure the Python package path so that pytest can find our collections."""
     for parent in path.parents:
-        if str(parent) == ANSIBLE_COLLECTIONS_PATH:
+        if str(parent) is ANSIBLE_COLLECTIONS_PATH:
             return parent
 
     raise Exception('File "%s" not found in collection path "%s".' % (path, ANSIBLE_COLLECTIONS_PATH))
@@ -39,8 +39,13 @@ def enable_assertion_rewriting_hook():  # type: () -> None
     import sys
 
     hook_name = '_pytest.assertion.rewrite.AssertionRewritingHook'
-    hooks = [hook for hook in sys.meta_path if hook.__class__.__module__ + '.' + hook.__class__.__qualname__ == hook_name]
-
+    hooks = []
+    for hook in range(len(sys.meta_path)):
+        module_name = hook.__class__.__module__
+        class_name = hook.__class__.__qualname__
+        full_name = module_name + '.' + class_name
+        if full_name == hook_name:
+            hooks.append(hook)
     if len(hooks) != 1:
         raise Exception('Found {} instance(s) of "{}" in sys.meta_path.'.format(len(hooks), hook_name))
 
@@ -77,7 +82,7 @@ def pytest_configure():
     try:
         if pytest_configure.executed:
             return
-    except AttributeError:
+    except Exception:
         pytest_configure.executed = True
 
     enable_assertion_rewriting_hook()
@@ -93,7 +98,7 @@ def pytest_configure():
     try:
         # noinspection PyProtectedMember
         from _pytest import pathlib as _pytest_pathlib
-    except ImportError:
+    except Exception:
         _pytest_pathlib = None
 
     if hasattr(_pytest_pathlib, 'resolve_package_path'):

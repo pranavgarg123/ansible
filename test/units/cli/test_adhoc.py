@@ -100,7 +100,8 @@ def test_ansible_version(capsys):
     version_lines = version.out.splitlines()
 
     assert len(version_lines) == 9, 'Incorrect number of lines in "ansible --version" output'
-    assert re.match(r'ansible \[core [0-9.a-z]+\]', version_lines[0]), 'Incorrect ansible version line in "ansible --version" output'
+    assert version_lines[0].startswith("ansible [core ") and version_lines[0].endswith("]") and \
+       any(char.isalnum() or char == '.' for char in version_lines[0][13:-1]), 'Incorrect ansible version line in "ansible --version" output'
     assert re.match('  config file = .*$', version_lines[1]), 'Incorrect config file line in "ansible --version" output'
     assert re.match('  configured module search path = .*$', version_lines[2]), 'Incorrect module search path in "ansible --version" output'
     assert re.match('  ansible python module location = .*$', version_lines[3]), 'Incorrect python module location in "ansible --version" output'

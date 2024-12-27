@@ -178,7 +178,13 @@ def check_container_cgroup_status(args: EnvironmentConfig, config: DockerConfig,
 
     identity = get_identity(args, config, container_name)
     messages: list[tuple[pathlib.PurePosixPath, bool, str]] = [(path, result[0], result[1]) for path, result in sorted(results.items())]
-    message = '\n'.join(f'{"PASS" if result else "FAIL"}: {path} -> {message}' for path, result, message in messages)
+    message = ""
+    for path, result, msg in messages:
+        if result:
+            status = "PASS"
+        else:
+            status = "FAIL"
+        message += f"{status}: {path} -> {msg}\n"
 
     display.info(f'>>> Container: {identity}\n{message.rstrip()}')
 
