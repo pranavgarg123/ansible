@@ -49,7 +49,7 @@ class Bootstrap:
 
     def get_script(self) -> str:
         """Return a shell script to bootstrap the specified host."""
-        path = ANSIBLE_TEST_TARGET_ROOT + '/setup/bootstrap.sh'
+        path = os.path.join(ANSIBLE_TEST_TARGET_ROOT, 'setup', 'bootstrap.sh')
 
         content = read_text_file(path)
         content = set_shebang(content, '/bin/sh')
