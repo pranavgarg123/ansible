@@ -176,7 +176,7 @@ def delegate_command(args: EnvironmentConfig, host_state: HostState, exclude: li
                 os.path.join(content_root, ResultType.JUNIT.relative_path),
                 os.path.join(content_root, ResultType.COVERAGE.relative_path),
             ]
-
+            # maybe do something here
             con.run(['mkdir', '-p'] + writable_dirs, capture=True)
             con.run(['chmod', '777'] + writable_dirs, capture=True)
             con.run(['chmod', '755', working_directory], capture=True)

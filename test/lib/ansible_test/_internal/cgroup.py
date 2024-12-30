@@ -4,7 +4,6 @@ from __future__ import annotations
 import codecs
 import dataclasses
 import pathlib
-import re
 
 
 class CGroupPath:
@@ -110,5 +109,5 @@ class MountEntry:
 def _decode_path(value: str) -> pathlib.PurePosixPath:
     """Decode and return a path which may contain octal escape sequences."""
     # See: https://github.com/torvalds/linux/blob/aea23e7c464bfdec04b52cf61edb62030e9e0d0a/fs/proc_namespace.c#L150
-    path = re.sub(r'(\\[0-7]{3})', lambda m: codecs.decode(m.group(0).encode('ascii'), 'unicode_escape'), value)
+    path = value.replace(r'\\[0-7]{3}', lambda m: codecs.decode(m.group(0), 'unicode_escape'), value)
     return pathlib.PurePosixPath(path)

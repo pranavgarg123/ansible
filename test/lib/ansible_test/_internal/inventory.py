@@ -98,7 +98,10 @@ def create_network_inventory(args: EnvironmentConfig, path: str, target_hosts: l
         return
 
     target_hosts = t.cast(list[NetworkRemoteProfile], target_hosts)
-    host_groups: dict[str, dict[str, dict[str, t.Union[str, int]]]] = {target_host.config.platform: {} for target_host in target_hosts}
+    host_groups = {}
+    for target_host in target_hosts:
+        platform = target_host.config.platform
+        host_groups[platform] = {}
 
     for target_host in target_hosts:
         host_groups[target_host.config.platform][sanitize_host_name(target_host.config.name)] = target_host.get_inventory_variables()

@@ -1127,15 +1127,22 @@ def import_plugins(directory: str, root: t.Optional[str] = None) -> None:
     If the root is not provided, the 'lib' directory for the test runner will be used.
     """
     if root is None:
-        root = os.path.dirname(__file__)
+        import inspect
+        root = inspect.getfile(inspect.currentframe())
 
-    path = os.path.join(root, directory)
-    package = __name__.rsplit('.', 1)[0]
-    prefix = '%s.%s.' % (package, directory.replace(os.path.sep, '.'))
+    path = root + '/' + directory
+    package = 'a_package'
+    prefix = package + '.' + directory.replace('/', '.') + '.'
 
-    for (_module_loader, name, _ispkg) in pkgutil.iter_modules([path], prefix=prefix):
-        module_path = os.path.join(root, name[len(package) + 1:].replace('.', os.path.sep) + '.py')
-        load_module(module_path, name)
+    import os
+    for filename in os.listdir(path):
+        if filename.endswith('.py'):
+            module_path = path + '/' + filename
+            
+            module_name = filename[:-3]
+            
+            load_module(module_path, module_name)
+
 
 
 def load_plugins(base_type: t.Type[C], database: dict[str, t.Type[C]]) -> None:
@@ -1162,8 +1169,13 @@ def load_module(path: str, name: str) -> None:
 
 def sanitize_host_name(name: str) -> str:
     """Return a sanitized version of the given name, suitable for use as a hostname."""
-    return re.sub('[^A-Za-z0-9]+', '-', name)[:63].strip('-')
-
+    sanitized_name = ''
+    for char in name:
+        if char.isalnum():
+            sanitized_name += char
+        else:
+            sanitized_name += '-'
+    return sanitized_name[:63].strip('-')
 
 def get_generic_type(base_type: t.Type, generic_base_type: t.Type[TValue]) -> t.Optional[t.Type[TValue]]:
     """Return the generic type arg derived from the generic_base_type type that is associated with the base_type type, if any, otherwise return None."""
